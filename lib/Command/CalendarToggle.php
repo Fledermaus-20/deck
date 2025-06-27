@@ -9,7 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class SetCalendarOptIn extends Command {
+class SetCalendarToggle extends Command {
     private IUserManager $userManager;
     private IConfig $config;
 
@@ -21,19 +21,19 @@ class SetCalendarOptIn extends Command {
 
     protected function configure() {
         $this
-            ->setName('deck:calendar-optin')
-            ->setDescription('Enable or disable Deck calendar/tasks integration for all users (opt-in or opt-out).')
+            ->setName('deck:calendar-toggle')
+            ->setDescription('Enable or disable Deck calendar/tasks integration for all existing users. Users can still change their own setting afterwards. Only affects users that already exist at the time of execution.')
             ->addOption(
                 'on',
                 null,
                 InputOption::VALUE_NONE,
-                'Enable calendar/tasks integration for all users (opt-out, default is opt-in/off)'
+                'Enable calendar/tasks integration for all existing users (users can opt-out later)'
             )
             ->addOption(
                 'off',
                 null,
                 InputOption::VALUE_NONE,
-                'Disable calendar/tasks integration for all users (opt-in, default)'
+                'Disable calendar/tasks integration for all existing users (users can opt-in later)'
             );
     }
 
@@ -42,6 +42,10 @@ class SetCalendarOptIn extends Command {
         $disable = $input->getOption('off');
         if ($enable && $disable) {
             $output->writeln('<error>Cannot use --on and --off together.</error>');
+            return 1;
+        }
+        if (!$enable && !$disable) {
+            $output->writeln('<error>Please specify either --on or --off.</error>');
             return 1;
         }
         $value = $enable ? 'yes' : '';
@@ -53,7 +57,7 @@ class SetCalendarOptIn extends Command {
             $output->writeln("Set calendar integration to '" . ($enable ? 'on' : 'off') . "' for user: $uid");
             $count++;
         }
-        $output->writeln("Done. Updated $count users.");
+        $output->writeln("Done. Updated $count existing users.");
         return 0;
     }
 } 
